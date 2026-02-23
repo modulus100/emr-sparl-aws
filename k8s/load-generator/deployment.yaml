@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oracle-cdc-load-generator
+  namespace: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oracle-cdc-load-generator
+  template:
+    metadata:
+      labels:
+        app: oracle-cdc-load-generator
+    spec:
+      containers:
+        - name: load-generator
+          image: REPLACE_WITH_ECR_IMAGE_URI
+          imagePullPolicy: Always
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: oracle-kafka-kafka-bootstrap.kafka.svc:9092
+            - name: KAFKA_TOPIC
+              value: oracle-cdc-events
+            - name: GENERATOR_THREADS
+              value: "1"
+            - name: MESSAGES_PER_SECOND_PER_THREAD
+              value: "20"
+            - name: DURATION_SECONDS
+              value: "86400"
+            - name: TARGET_MESSAGE_SIZE_BYTES
+              value: "1024"
+            - name: ORACLE_DB
+              value: ORCLCDB
+            - name: ORACLE_SCHEMA
+              value: DEBEZIUM
+            - name: ORACLE_TABLE
+              value: CUSTOMERS
+          resources:
+            requests:
+              cpu: "30m"
+              memory: 192Mi
+            limits:
+              cpu: "200m"
+              memory: 512Mi

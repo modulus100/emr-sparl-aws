@@ -1,0 +1,43 @@
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+grafana:
+  adminPassword: admin123
+  service:
+    type: LoadBalancer
+  defaultDashboardsTimezone: utc
+
+additionalPodMonitors:
+  - name: spark-driver-metrics
+    namespaceSelector:
+      matchNames:
+        - emr
+    selector:
+      matchLabels:
+        spark-role: driver
+        monitoring: enabled
+    podMetricsEndpoints:
+      - targetPort: 4040
+        path: /metrics/executors/prometheus
+        interval: 30s
+        scrapeTimeout: 10s
+        relabelings:
+          - sourceLabels: [__meta_kubernetes_pod_label_spark_app_name]
+            targetLabel: spark_app_name
+          - sourceLabels: [__meta_kubernetes_pod_name]
+            targetLabel: pod
+
+additionalServiceMonitors:
+  - name: strimzi-kafka-exporter
+    namespaceSelector:
+      matchNames:
+        - kafka
+    selector:
+      matchLabels:
+        strimzi.io/name: oracle-kafka-kafka-exporter
+    endpoints:
+      - port: tcp-prometheus
+        interval: 30s
+        scrapeTimeout: 10s

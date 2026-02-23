@@ -1,0 +1,4 @@
+version: v2
+plugins:
+  - protoc_builtin: java
+    out: kafka-tools/src/generated/java

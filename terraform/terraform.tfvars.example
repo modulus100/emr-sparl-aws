@@ -1,0 +1,32 @@
+aws_region       = "us-east-1"
+aws_account_id   = "928621976489"
+project_name     = "oracle-cdc"
+environment      = "dev"
+eks_cluster_name = "oracle-cdc-eks"
+eks_node_instance_types = ["t3a.large"]
+eks_node_capacity_type  = "ON_DEMAND"
+eks_node_disk_size_gb   = 40
+eks_desired_size        = 1
+eks_min_size            = 1
+eks_max_size            = 1
+enable_k8s_runtime      = true
+enable_load_generator   = true
+load_generator_image_uri = "<account>.dkr.ecr.<region>.amazonaws.com/oracle-cdc-load-generator:latest"
+enable_observability    = true
+strimzi_chart_version   = "0.50.1"
+kube_prometheus_stack_chart_version = "69.8.2"
+enable_emr_job_module   = true
+aws_profile             = "admin"
+emr_release_label       = "emr-7.12.0-latest"
+emr_job_name            = "oracle-cdc-kafka-to-iceberg"
+kafka_bootstrap_servers = "oracle-kafka-kafka-bootstrap.kafka.svc:9092"
+kafka_topic             = "oracle-cdc-events"
+spark_reader_group_id   = "spark-cdc-reader"
+lag_commit_group_id     = "spark-cdc-lag"
+stream_runtime_seconds  = 180
+submit_emr_job_on_apply = true
+submit_emr_job_token    = "run-1"
+
+extra_tags = {
+  owner = "al.ma"
+}

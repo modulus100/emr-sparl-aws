@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package cdc.oracle.v1;
+
+option java_multiple_files = true;
+option java_package = "org.example.protobuf.cdc.oracle.v1";
+option java_outer_classname = "OracleCdcProto";
+
+message OracleSourceMetadata {
+  string version = 1;
+  string connector = 2;
+  string name = 3;
+  int64 ts_ms = 4;
+  string snapshot = 5;
+  string db = 6;
+  string schema = 7;
+  string table = 8;
+  string tx_id = 9;
+  string scn = 10;
+  int64 commit_scn = 11;
+}
+
+message CustomerState {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string status = 5;
+  double credit_limit = 6;
+  string city = 7;
+  string country = 8;
+  string source_system = 9;
+  string payload_padding = 10;
+}
+
+message OracleCdcEnvelope {
+  CustomerState before = 1;
+  CustomerState after = 2;
+  OracleSourceMetadata source = 3;
+  string op = 4;
+  int64 ts_ms = 5;
+  string transaction_id = 6;
+}

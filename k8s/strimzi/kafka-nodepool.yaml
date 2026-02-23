@@ -1,0 +1,21 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: controller-broker
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: oracle-kafka
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  resources:
+    requests:
+      cpu: "100m"
+      memory: 384Mi
+    limits:
+      cpu: "800m"
+      memory: 1Gi
+  storage:
+    type: ephemeral

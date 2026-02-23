@@ -1,0 +1,11 @@
+[project]
+name = "emr-eks-cdc-offload"
+version = "0.1.0"
+description = "PySpark CDC offload from Kafka protobuf to Iceberg on EMR on EKS"
+requires-python = ">=3.11"
+dependencies = [
+  "pyspark==3.5.1",
+]
+
+[tool.uv]
+dev-dependencies = []
