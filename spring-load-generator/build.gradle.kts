@@ -13,6 +13,7 @@ dependencies {
     implementation(platform(libs.spring.boot.bom))
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.kafka)
     implementation(libs.jackson.dataformat.yaml)
     implementation(libs.kafka.clients)
     implementation(libs.protobuf.java)

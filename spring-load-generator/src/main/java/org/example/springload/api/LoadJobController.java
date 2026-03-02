@@ -2,11 +2,9 @@ package org.example.springload.api;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.example.springload.service.LoadJobService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
-@RequestMapping("/api/v1/load-jobs")
+@RequestMapping("/api/v1/load-generator")
 public class LoadJobController {
     private final LoadJobService loadJobService;
 
@@ -47,18 +45,35 @@ public class LoadJobController {
         }
     }
 
-    @GetMapping(path = "/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JobStatusResponse status(@PathVariable String jobId) {
-        return loadJobService.status(jobId);
+    @PostMapping(
+            path = "/update",
+            consumes = {"application/x-yaml", "application/yaml", "text/yaml", "text/plain"},
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public SubmitJobResponse updateYaml(@RequestBody String yamlPayload) {
+        return loadJobService.updateYaml(yamlPayload);
     }
 
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<JobStatusResponse> list() {
-        return loadJobService.list();
+    @PostMapping(
+            path = "/update-file",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public SubmitJobResponse updateFile(@RequestPart("file") MultipartFile file) {
+        try {
+            return loadJobService.updateYaml(new String(file.getBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new ResponseStatusException(BAD_REQUEST, "Cannot read uploaded file: " + e.getMessage(), e);
+        }
     }
 
-    @PostMapping(path = "/{jobId}/stop", produces = MediaType.APPLICATION_JSON_VALUE)
-    public JobStatusResponse stop(@PathVariable String jobId) {
-        return loadJobService.stop(jobId);
+    @GetMapping(path = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JobStatusResponse status() {
+        return loadJobService.status();
+    }
+
+    @PostMapping(path = "/stop", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JobStatusResponse stop() {
+        return loadJobService.stop();
     }
 }

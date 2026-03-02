@@ -121,6 +121,7 @@ uv sync
 ## 8. New controllable Spring Boot load generator (separate module)
 
 This is an additional generator and does not replace `kafka-tools`.
+It runs as a singleton: only one active generator instance is allowed.
 
 Run service:
 
@@ -134,7 +135,7 @@ Submit YAML config with curl:
 curl -X POST \
   -H "Content-Type: application/x-yaml" \
   --data-binary @spring-load-generator/examples/job.yaml \
-  http://localhost:8080/api/v1/load-jobs/submit
+  http://localhost:8080/api/v1/load-generator/submit
 ```
 
 Submit as multipart file:
@@ -142,25 +143,36 @@ Submit as multipart file:
 ```bash
 curl -X POST \
   -F "file=@spring-load-generator/examples/job.yaml" \
-  http://localhost:8080/api/v1/load-jobs/submit-file
+  http://localhost:8080/api/v1/load-generator/submit-file
 ```
 
-Check job status:
+Update running generator with new YAML config:
 
 ```bash
-curl http://localhost:8080/api/v1/load-jobs/<job-id>
+curl -X POST \
+  -H "Content-Type: application/x-yaml" \
+  --data-binary @spring-load-generator/examples/job.yaml \
+  http://localhost:8080/api/v1/load-generator/update
 ```
 
-List jobs:
+Update via multipart file:
 
 ```bash
-curl http://localhost:8080/api/v1/load-jobs
+curl -X POST \
+  -F "file=@spring-load-generator/examples/job.yaml" \
+  http://localhost:8080/api/v1/load-generator/update-file
 ```
 
-Stop job:
+Check singleton generator status:
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/load-jobs/<job-id>/stop
+curl http://localhost:8080/api/v1/load-generator/status
+```
+
+Stop generator:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/load-generator/stop
 ```
 
 ## Key files

@@ -12,12 +12,7 @@ public record LoadJobConfig(
         int producerThreads,
         int messagesPerSecond,
         long durationSeconds,
-        int messageSizeBytes,
         String keyPrefix,
-        String acks,
-        int lingerMs,
-        int batchSizeBytes,
-        String compressionType,
         List<String> operationCycle,
         OracleSourceConfig source
 ) {
@@ -29,12 +24,7 @@ public record LoadJobConfig(
             @JsonProperty("producer_threads") Integer producerThreads,
             @JsonProperty("messages_per_second") Integer messagesPerSecond,
             @JsonProperty("duration_seconds") Long durationSeconds,
-            @JsonProperty("message_size_bytes") Integer messageSizeBytes,
             @JsonProperty("key_prefix") String keyPrefix,
-            @JsonProperty("acks") String acks,
-            @JsonProperty("linger_ms") Integer lingerMs,
-            @JsonProperty("batch_size_bytes") Integer batchSizeBytes,
-            @JsonProperty("compression_type") String compressionType,
             @JsonProperty("operation_cycle") List<String> operationCycle,
             @JsonProperty("source") OracleSourceConfig source
     ) {
@@ -45,12 +35,7 @@ public record LoadJobConfig(
                 producerThreads == null ? 1 : producerThreads,
                 messagesPerSecond == null ? 5 : messagesPerSecond,
                 durationSeconds == null ? 0L : durationSeconds,
-                messageSizeBytes == null ? 1024 : messageSizeBytes,
                 defaultString(keyPrefix, "cust-"),
-                defaultString(acks, "1"),
-                lingerMs == null ? 20 : lingerMs,
-                batchSizeBytes == null ? 65536 : batchSizeBytes,
-                defaultString(compressionType, "lz4"),
                 operationCycle,
                 source
         );
@@ -82,9 +67,6 @@ public record LoadJobConfig(
         }
         if (durationSeconds < 0) {
             throw new IllegalArgumentException("duration_seconds must be >= 0");
-        }
-        if (messageSizeBytes < 256) {
-            throw new IllegalArgumentException("message_size_bytes must be >= 256");
         }
         if (operationCycle == null || operationCycle.isEmpty()) {
             throw new IllegalArgumentException("operation_cycle must contain at least one operation");

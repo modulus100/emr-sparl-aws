@@ -10,8 +10,6 @@ public record JobStatusResponse(
         Instant submittedAt,
         Instant startedAt,
         Instant finishedAt,
-        long producedMessages,
-        long failedMessages,
         boolean stopRequested,
         int producerThreads,
         int messagesPerSecond,

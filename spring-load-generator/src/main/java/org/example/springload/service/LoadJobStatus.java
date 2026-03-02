@@ -2,54 +2,54 @@ package org.example.springload.service;
 
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class LoadJobStatus {
-    private final String jobId;
-    private final String jobName;
-    private final AtomicLong producedMessages = new AtomicLong(0);
-    private final AtomicLong failedMessages = new AtomicLong(0);
-    private final AtomicBoolean stopRequested = new AtomicBoolean(false);
-    private final Instant submittedAt = Instant.now();
-
-    private volatile Instant startedAt;
-    private volatile Instant finishedAt;
-    private volatile JobState state = JobState.SUBMITTED;
-    private volatile String lastError;
-
+public record LoadJobStatus(
+        String jobId,
+        String jobName,
+        AtomicBoolean stopRequested,
+        Instant submittedAt,
+        AtomicReference<Instant> startedAt,
+        AtomicReference<Instant> finishedAt,
+        AtomicReference<JobState> state,
+        AtomicReference<String> lastError
+) {
     public LoadJobStatus(String jobId, String jobName) {
-        this.jobId = jobId;
-        this.jobName = jobName;
+        this(
+                jobId,
+                jobName,
+                new AtomicBoolean(false),
+                Instant.now(),
+                new AtomicReference<>(),
+                new AtomicReference<>(),
+                new AtomicReference<>(JobState.SUBMITTED),
+                new AtomicReference<>()
+        );
     }
 
     public void markRunning() {
-        startedAt = Instant.now();
-        state = JobState.RUNNING;
+        startedAt.set(Instant.now());
+        state.set(JobState.RUNNING);
     }
 
     public void markCompleted() {
-        finishedAt = Instant.now();
-        state = JobState.COMPLETED;
+        finishedAt.set(Instant.now());
+        state.set(JobState.COMPLETED);
     }
 
     public void markStopped() {
-        finishedAt = Instant.now();
-        state = JobState.STOPPED;
+        finishedAt.set(Instant.now());
+        state.set(JobState.STOPPED);
     }
 
     public void markFailed(String errorMessage) {
-        lastError = errorMessage;
-        finishedAt = Instant.now();
-        state = JobState.FAILED;
+        lastError.set(errorMessage);
+        finishedAt.set(Instant.now());
+        state.set(JobState.FAILED);
     }
 
-    public void incrementProduced() {
-        producedMessages.incrementAndGet();
-    }
-
-    public void incrementFailed(String errorMessage) {
-        failedMessages.incrementAndGet();
-        lastError = errorMessage;
+    public void setLastError(String errorMessage) {
+        lastError.set(errorMessage);
     }
 
     public void requestStop() {
@@ -64,16 +64,8 @@ public class LoadJobStatus {
         return jobName;
     }
 
-    public long getProducedMessages() {
-        return producedMessages.get();
-    }
-
-    public long getFailedMessages() {
-        return failedMessages.get();
-    }
-
     public boolean isStopRequested() {
-        return stopRequested.get();
+        return stopRequested().get();
     }
 
     public Instant getSubmittedAt() {
@@ -81,18 +73,18 @@ public class LoadJobStatus {
     }
 
     public Instant getStartedAt() {
-        return startedAt;
+        return startedAt.get();
     }
 
     public Instant getFinishedAt() {
-        return finishedAt;
+        return finishedAt.get();
     }
 
     public JobState getState() {
-        return state;
+        return state.get();
     }
 
     public String getLastError() {
-        return lastError;
+        return lastError.get();
     }
 }

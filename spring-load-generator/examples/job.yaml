@@ -4,12 +4,7 @@ topic: oracle-cdc-events
 producer_threads: 2
 messages_per_second: 25
 duration_seconds: 600
-message_size_bytes: 1024
 key_prefix: cust-
-acks: "1"
-linger_ms: 20
-batch_size_bytes: 65536
-compression_type: lz4
 operation_cycle:
   - c
   - u
