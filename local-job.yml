@@ -1,0 +1,19 @@
+job_name: local-test
+bootstrap_servers: localhost:29092
+topic: oracle-cdc-events
+producer_threads: 1
+messages_per_second: 1
+duration_seconds: 0
+key_prefix: cust-
+operation_cycle:
+  - u
+source:
+  version: 2.6.0.Final
+  connector: oracle
+  name: oracle-cdc
+  db: ORCLCDB
+  schema: DEBEZIUM
+  table: CUSTOMERS
+  snapshot: "false"
+  transaction_prefix: tx
+  scn_prefix: scn

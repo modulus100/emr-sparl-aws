@@ -129,6 +129,19 @@ Run service:
 ./gradlew :spring-load-generator:bootRun
 ```
 
+Quick local submit + stop (using `local-job.yml`):
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/x-yaml" \
+  --data-binary @local-job.yml \
+  http://localhost:8080/api/v1/load-generator/submit
+
+curl http://localhost:8080/api/v1/load-generator/status
+
+curl -X POST http://localhost:8080/api/v1/load-generator/stop
+```
+
 Submit YAML config with curl:
 
 ```bash
