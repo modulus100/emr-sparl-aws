@@ -24,6 +24,7 @@ terraform/terraform.tfvars
 
 # Generated protobuf artifacts
 kafka-tools/src/generated/java/
+spring-load-generator/src/generated/java/
 artifacts/descriptors/*.pb
 
 # Runtime outputs / logs

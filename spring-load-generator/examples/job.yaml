@@ -1,0 +1,26 @@
+job_name: oracle-cdc-controlled
+bootstrap_servers: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
+topic: oracle-cdc-events
+producer_threads: 2
+messages_per_second: 25
+duration_seconds: 600
+message_size_bytes: 1024
+key_prefix: cust-
+acks: "1"
+linger_ms: 20
+batch_size_bytes: 65536
+compression_type: lz4
+operation_cycle:
+  - c
+  - u
+  - d
+source:
+  version: 2.6.0.Final
+  connector: oracle
+  name: oracle-cdc
+  db: ORCLCDB
+  schema: DEBEZIUM
+  table: CUSTOMERS
+  snapshot: "false"
+  transaction_prefix: tx
+  scn_prefix: scn

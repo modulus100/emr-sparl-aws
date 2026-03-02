@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-    implementation("com.google.protobuf:protobuf-java:4.33.4")
-    implementation("org.apache.kafka:kafka-clients:3.8.1")
+    implementation(libs.jackson2.databind)
+    implementation(libs.protobuf.java)
+    implementation(libs.kafka.clients)
 }
 
 sourceSets {

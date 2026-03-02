@@ -18,3 +18,4 @@ plugins {
 
 rootProject.name = "emr-spak-aws"
 include("kafka-tools")
+include("spring-load-generator")

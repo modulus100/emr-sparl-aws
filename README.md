@@ -118,6 +118,51 @@ uv sync
 ./pyspark_job/run_local.sh
 ```
 
+## 8. New controllable Spring Boot load generator (separate module)
+
+This is an additional generator and does not replace `kafka-tools`.
+
+Run service:
+
+```bash
+./gradlew :spring-load-generator:bootRun
+```
+
+Submit YAML config with curl:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/x-yaml" \
+  --data-binary @spring-load-generator/examples/job.yaml \
+  http://localhost:8080/api/v1/load-jobs/submit
+```
+
+Submit as multipart file:
+
+```bash
+curl -X POST \
+  -F "file=@spring-load-generator/examples/job.yaml" \
+  http://localhost:8080/api/v1/load-jobs/submit-file
+```
+
+Check job status:
+
+```bash
+curl http://localhost:8080/api/v1/load-jobs/<job-id>
+```
+
+List jobs:
+
+```bash
+curl http://localhost:8080/api/v1/load-jobs
+```
+
+Stop job:
+
+```bash
+curl -X POST http://localhost:8080/api/v1/load-jobs/<job-id>/stop
+```
+
 ## Key files
 
 - Protobuf schema: `proto/oracle_cdc.proto`
