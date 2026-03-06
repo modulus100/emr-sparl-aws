@@ -37,6 +37,39 @@ public final class OffsetLagCommitter {
         Properties props = new Properties();
         props.put("bootstrap.servers", bootstrapServers);
         props.put("request.timeout.ms", "30000");
+        // Example for Amazon MSK IAM auth with an attached IAM role (IRSA / EC2 role).
+        // Uncomment when using IAM-enabled broker endpoints, usually on port 9098:
+        //
+        // props.put("security.protocol", "SASL_SSL");
+        // props.put("sasl.mechanism", "AWS_MSK_IAM");
+        // props.put(
+        //         "sasl.jaas.config",
+        //         "software.amazon.msk.auth.iam.IAMLoginModule required;"
+        // );
+        // props.put(
+        //         "sasl.client.callback.handler.class",
+        //         "software.amazon.msk.auth.iam.IAMClientCallbackHandler"
+        // );
+        //
+        // Example for explicit STS assume-role from the committer itself:
+        //
+        // props.put("security.protocol", "SASL_SSL");
+        // props.put("sasl.mechanism", "AWS_MSK_IAM");
+        // props.put(
+        //         "sasl.jaas.config",
+        //         "software.amazon.msk.auth.iam.IAMLoginModule required "
+        //                 + "awsRoleArn=\"arn:aws:iam::123456789012:role/YourMskAccessRole\" "
+        //                 + "awsRoleSessionName=\"offset-committer\" "
+        //                 + "awsStsRegion=\"us-east-1\";"
+        // );
+        // props.put(
+        //         "sasl.client.callback.handler.class",
+        //         "software.amazon.msk.auth.iam.IAMClientCallbackHandler"
+        // );
+        //
+        // To use the examples above, add dependency:
+        // software.amazon.msk:aws-msk-iam-auth
+        // and connect to the IAM-enabled MSK bootstrap brokers.
 
         try (AdminClient admin = AdminClient.create(props)) {
             Map<TopicPartition, OffsetAndMetadata> commitPayload = new HashMap<>();
