@@ -121,7 +121,8 @@ uv sync
 ## 8. New controllable Spring Boot load generator (separate module)
 
 This is an additional generator and does not replace `kafka-tools`.
-It runs as a singleton: only one active generator instance is allowed.
+It runs as a singleton at the API level: one submitted job at a time, with one or more YAML-defined workers inside that job.
+Each worker can target a different topic and rate.
 
 Run service:
 
@@ -140,6 +141,33 @@ curl -X POST \
 curl http://localhost:8080/api/v1/load-generator/status
 
 curl -X POST http://localhost:8080/api/v1/load-generator/stop
+```
+
+YAML shape:
+
+```yaml
+job_name: local-test
+bootstrap_servers: localhost:29092
+duration_seconds: 0
+workers:
+  - name: local-primary
+    topic: oracle-cdc-events
+    messages_per_second: 1
+    key_prefix: cust-primary-
+  - name: local-secondary
+    topic: oracle-cdc-events-2
+    messages_per_second: 2
+    key_prefix: cust-secondary-
+source:
+  version: 2.6.0.Final
+  connector: oracle
+  name: oracle-cdc
+  db: ORCLCDB
+  schema: DEBEZIUM
+  table: CUSTOMERS
+  snapshot: "false"
+  transaction_prefix: tx
+  scn_prefix: scn
 ```
 
 Submit YAML config with curl:

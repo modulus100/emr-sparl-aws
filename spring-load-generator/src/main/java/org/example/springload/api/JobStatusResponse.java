@@ -1,6 +1,7 @@
 package org.example.springload.api;
 
 import java.time.Instant;
+import java.util.List;
 import org.example.springload.service.JobState;
 
 public record JobStatusResponse(
@@ -11,10 +12,9 @@ public record JobStatusResponse(
         Instant startedAt,
         Instant finishedAt,
         boolean stopRequested,
-        int producerThreads,
-        int messagesPerSecond,
+        int workerCount,
         long durationSeconds,
-        String topic,
+        List<JobWorkerResponse> workers,
         String lastError
 ) {
 }

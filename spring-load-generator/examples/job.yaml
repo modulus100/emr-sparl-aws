@@ -1,14 +1,15 @@
 job_name: oracle-cdc-controlled
 bootstrap_servers: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
-topic: oracle-cdc-events
-producer_threads: 2
-messages_per_second: 25
 duration_seconds: 600
-key_prefix: cust-
-operation_cycle:
-  - c
-  - u
-  - d
+workers:
+  - name: customers-fast
+    topic: oracle-cdc-events
+    messages_per_second: 25
+    key_prefix: cust-fast-
+  - name: customers-slow
+    topic: oracle-cdc-events-low
+    messages_per_second: 5
+    key_prefix: cust-slow-
 source:
   version: 2.6.0.Final
   connector: oracle

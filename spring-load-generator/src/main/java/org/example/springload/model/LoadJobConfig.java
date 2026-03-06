@@ -3,49 +3,34 @@ package org.example.springload.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
-import java.util.Objects;
 
 public record LoadJobConfig(
         String jobName,
         String bootstrapServers,
-        String topic,
-        int producerThreads,
-        int messagesPerSecond,
         long durationSeconds,
-        String keyPrefix,
-        List<String> operationCycle,
-        OracleSourceConfig source
+        OracleSourceConfig source,
+        List<LoadWorkerConfig> workers
 ) {
     @JsonCreator
     public static LoadJobConfig fromYaml(
             @JsonProperty("job_name") String jobName,
             @JsonProperty("bootstrap_servers") String bootstrapServers,
-            @JsonProperty("topic") String topic,
-            @JsonProperty("producer_threads") Integer producerThreads,
-            @JsonProperty("messages_per_second") Integer messagesPerSecond,
             @JsonProperty("duration_seconds") Long durationSeconds,
-            @JsonProperty("key_prefix") String keyPrefix,
-            @JsonProperty("operation_cycle") List<String> operationCycle,
-            @JsonProperty("source") OracleSourceConfig source
+            @JsonProperty("source") OracleSourceConfig source,
+            @JsonProperty("workers") List<LoadWorkerConfig> workers
     ) {
         return new LoadJobConfig(
                 defaultString(jobName, "oracle-cdc-load"),
                 bootstrapServers,
-                defaultString(topic, "oracle-cdc-events"),
-                producerThreads == null ? 1 : producerThreads,
-                messagesPerSecond == null ? 5 : messagesPerSecond,
                 durationSeconds == null ? 0L : durationSeconds,
-                defaultString(keyPrefix, "cust-"),
-                operationCycle,
-                source
+                source,
+                workers
         );
     }
 
     public LoadJobConfig {
-        operationCycle = operationCycle == null || operationCycle.isEmpty()
-                ? List.of("c", "u", "d")
-                : List.copyOf(operationCycle);
         source = source == null ? new OracleSourceConfig() : source;
+        workers = workers == null ? List.of() : List.copyOf(workers);
     }
 
     private static String defaultString(String value, String fallback) {
@@ -56,28 +41,20 @@ public record LoadJobConfig(
         if (bootstrapServers == null || bootstrapServers.isBlank()) {
             throw new IllegalArgumentException("bootstrap_servers is required");
         }
-        if (topic == null || topic.isBlank()) {
-            throw new IllegalArgumentException("topic is required");
-        }
-        if (producerThreads < 1) {
-            throw new IllegalArgumentException("producer_threads must be >= 1");
-        }
-        if (messagesPerSecond < 1) {
-            throw new IllegalArgumentException("messages_per_second must be >= 1");
-        }
         if (durationSeconds < 0) {
             throw new IllegalArgumentException("duration_seconds must be >= 0");
         }
-        if (operationCycle == null || operationCycle.isEmpty()) {
-            throw new IllegalArgumentException("operation_cycle must contain at least one operation");
-        }
-        for (String op : operationCycle) {
-            if (!Objects.equals(op, "c") && !Objects.equals(op, "u") && !Objects.equals(op, "d")) {
-                throw new IllegalArgumentException("operation_cycle supports only c, u, d");
-            }
-        }
         if (source == null) {
             throw new IllegalArgumentException("source section is required");
+        }
+        if (workers == null || workers.isEmpty()) {
+            throw new IllegalArgumentException("workers must contain at least one worker");
+        }
+        for (LoadWorkerConfig worker : workers) {
+            if (worker == null) {
+                throw new IllegalArgumentException("workers must not contain null entries");
+            }
+            worker.validate();
         }
     }
 }

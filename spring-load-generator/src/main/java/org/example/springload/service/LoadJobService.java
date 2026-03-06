@@ -10,9 +10,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.example.springload.api.JobWorkerResponse;
 import org.example.springload.api.JobStatusResponse;
 import org.example.springload.api.SubmitJobResponse;
 import org.example.springload.model.LoadJobConfig;
+import org.example.springload.model.LoadWorkerConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -146,11 +148,19 @@ public class LoadJobService {
                 status.getStartedAt(),
                 status.getFinishedAt(),
                 status.isStopRequested(),
-                1,
-                config.messagesPerSecond(),
+                config.workers().size(),
                 config.durationSeconds(),
-                config.topic(),
+                config.workers().stream().map(this::toWorkerResponse).toList(),
                 status.getLastError()
+        );
+    }
+
+    private JobWorkerResponse toWorkerResponse(LoadWorkerConfig worker) {
+        return new JobWorkerResponse(
+                worker.name(),
+                worker.topic(),
+                worker.messagesPerSecond(),
+                worker.keyPrefix()
         );
     }
 }

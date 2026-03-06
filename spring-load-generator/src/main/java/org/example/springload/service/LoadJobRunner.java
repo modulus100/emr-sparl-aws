@@ -2,7 +2,14 @@ package org.example.springload.service;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -13,6 +20,7 @@ import org.example.protobuf.cdc.oracle.v1.CustomerState;
 import org.example.protobuf.cdc.oracle.v1.OracleCdcEnvelope;
 import org.example.protobuf.cdc.oracle.v1.OracleSourceMetadata;
 import org.example.springload.model.LoadJobConfig;
+import org.example.springload.model.LoadWorkerConfig;
 import org.example.springload.model.OracleSourceConfig;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -39,27 +47,37 @@ public class LoadJobRunner implements Runnable {
         long endNanos = config.durationSeconds() > 0
                 ? startNanos + TimeUnit.SECONDS.toNanos(config.durationSeconds())
                 : Long.MAX_VALUE;
+        ThreadFactory workerFactory = Thread.ofPlatform().name("load-gen-worker-", 0).factory();
+        ExecutorService workerPool = Executors.newFixedThreadPool(config.workers().size(), workerFactory);
 
         DefaultKafkaProducerFactory<String, byte[]> producerFactory =
                 new DefaultKafkaProducerFactory<>(producerProperties());
         KafkaTemplate<String, byte[]> kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
         try {
-            produceLoop(kafkaTemplate, startNanos, endNanos);
+            List<Future<?>> workerFutures = new ArrayList<>();
+            for (LoadWorkerConfig worker : config.workers()) {
+                workerFutures.add(workerPool.submit(() -> produceLoop(worker, kafkaTemplate, startNanos, endNanos)));
+            }
+            waitForWorkers(workerFutures);
             kafkaTemplate.flush();
             if (status.isStopRequested()) {
                 status.markStopped();
             } else {
                 status.markCompleted();
             }
+        } catch (ExecutionException e) {
+            status.markFailed(rootMessage(e));
         } catch (Exception e) {
             status.markFailed(rootMessage(e));
         } finally {
+            workerPool.shutdownNow();
             producerFactory.destroy();
         }
     }
 
     private void produceLoop(
+            LoadWorkerConfig worker,
             KafkaTemplate<String, byte[]> kafkaTemplate,
             long startNanos,
             long endNanos
@@ -73,16 +91,16 @@ public class LoadJobRunner implements Runnable {
                 return;
             }
 
-            pace(seq, startNanos, config.messagesPerSecond());
+            pace(seq, startNanos, worker.messagesPerSecond());
             if (status.isStopRequested() || Thread.currentThread().isInterrupted()) {
                 return;
             }
 
-            String key = config.keyPrefix() + seq;
+            String key = worker.keyPrefix() + seq;
             OracleCdcEnvelope envelope = buildEnvelope(seq, random);
 
             try {
-                kafkaTemplate.send(config.topic(), key, envelope.toByteArray())
+                kafkaTemplate.send(worker.topic(), key, envelope.toByteArray())
                         .whenComplete((ignored, exception) -> {
                             if (exception != null) {
                                 status.setLastError(exception.getMessage());
@@ -92,6 +110,12 @@ public class LoadJobRunner implements Runnable {
                 status.setLastError(e.getMessage());
             }
             seq++;
+        }
+    }
+
+    private void waitForWorkers(List<Future<?>> workerFutures) throws Exception {
+        for (Future<?> future : workerFutures) {
+            future.get();
         }
     }
 
