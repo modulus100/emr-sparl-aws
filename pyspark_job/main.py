@@ -98,6 +98,7 @@ def create_table_if_needed(spark: SparkSession, config: AppConfig) -> None:
             source_commit_scn BIGINT,
             ts_ms BIGINT,
             event_ts TIMESTAMP,
+            iceberg_written_at TIMESTAMP,
             before_json STRING,
             after_json STRING
         ) USING iceberg
@@ -228,8 +229,15 @@ def process_batch(batch_df: DataFrame, batch_id: int, config: AppConfig) -> None
         print(f"Batch {batch_id}: empty")
         return
 
+    # Use one constant write timestamp for the whole micro-batch so Athena can measure end-to-end latency.
+    write_started_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    batch_to_write = batch_df.withColumn(
+        "iceberg_written_at",
+        F.lit(write_started_at).cast("timestamp"),
+    )
+
     (
-        batch_df.write.format("iceberg")
+        batch_to_write.write.format("iceberg")
         .mode("append")
         .save(config.full_table_name)
     )
