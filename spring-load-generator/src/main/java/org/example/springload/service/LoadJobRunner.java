@@ -1,5 +1,7 @@
 package org.example.springload.service;
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -14,7 +16,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.example.protobuf.cdc.oracle.v1.CustomerState;
 import org.example.protobuf.cdc.oracle.v1.OracleCdcEnvelope;
@@ -50,9 +51,9 @@ public class LoadJobRunner implements Runnable {
         ThreadFactory workerFactory = Thread.ofPlatform().name("load-gen-worker-", 0).factory();
         ExecutorService workerPool = Executors.newFixedThreadPool(config.workers().size(), workerFactory);
 
-        DefaultKafkaProducerFactory<String, byte[]> producerFactory =
+        DefaultKafkaProducerFactory<String, OracleCdcEnvelope> producerFactory =
                 new DefaultKafkaProducerFactory<>(producerProperties());
-        KafkaTemplate<String, byte[]> kafkaTemplate = new KafkaTemplate<>(producerFactory);
+        KafkaTemplate<String, OracleCdcEnvelope> kafkaTemplate = new KafkaTemplate<>(producerFactory);
 
         try {
             List<Future<?>> workerFutures = new ArrayList<>();
@@ -78,7 +79,7 @@ public class LoadJobRunner implements Runnable {
 
     private void produceLoop(
             LoadWorkerConfig worker,
-            KafkaTemplate<String, byte[]> kafkaTemplate,
+            KafkaTemplate<String, OracleCdcEnvelope> kafkaTemplate,
             long startNanos,
             long endNanos
     ) {
@@ -100,7 +101,7 @@ public class LoadJobRunner implements Runnable {
             OracleCdcEnvelope envelope = buildEnvelope(seq, random);
 
             try {
-                kafkaTemplate.send(worker.topic(), key, envelope.toByteArray())
+                kafkaTemplate.send(worker.topic(), key, envelope)
                         .whenComplete((ignored, exception) -> {
                             if (exception != null) {
                                 status.setLastError(exception.getMessage());
@@ -156,9 +157,11 @@ public class LoadJobRunner implements Runnable {
             String city,
             ThreadLocalRandom random
     ) {
+        long nowMillis = Instant.now().toEpochMilli();
         return CustomerState.newBuilder()
                 .setId(Long.toString(seq))
                 .setFirstName("Name" + seq)
+                .setMiddleName("M" + (seq % 97))
                 .setLastName("User" + (seq % 1000))
                 .setEmail("customer" + seq + "@example.com")
                 .setStatus(statusValue)
@@ -167,6 +170,25 @@ public class LoadJobRunner implements Runnable {
                 .setCountry("US")
                 .setSourceSystem("oracle")
                 .setPayloadPadding("")
+                .setPhoneNumber(String.format("+1-555-%04d", seq % 10000))
+                .setDateOfBirth(String.format("1985-01-%02d", (seq % 28) + 1))
+                .setLoyaltyTier(seq % 10 == 0 ? "gold" : "silver")
+                .setAccountNumber("ACC-" + seq)
+                .setPostalCode(String.format("%05d", (seq % 90000) + 10000))
+                .setState("TX")
+                .setStreetAddress((100 + (seq % 900)) + " Market Street")
+                .setCompany("Example Corp")
+                .setDepartment(seq % 2 == 0 ? "sales" : "support")
+                .setJobTitle(seq % 3 == 0 ? "manager" : "specialist")
+                .setPreferredLanguage(seq % 2 == 0 ? "en" : "es")
+                .setMarketingOptIn(seq % 2 == 0)
+                .setRiskScore((int) (seq % 100))
+                .setLastLoginTsMs(nowMillis - TimeUnit.MINUTES.toMillis(seq % 120))
+                .setUpdatedBy("spring-load-generator")
+                .setSegment(seq % 5 == 0 ? "enterprise" : "retail")
+                .setTaxId("TIN-" + seq)
+                .setExternalReference("EXT-" + seq)
+                .setNotes("generated record " + seq)
                 .build();
     }
 
@@ -196,7 +218,9 @@ public class LoadJobRunner implements Runnable {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaProtobufSerializer.class.getName());
+        props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, config.schemaRegistryUrl());
+        props.put(AbstractKafkaSchemaSerDeConfig.AUTO_REGISTER_SCHEMAS, true);
         return props;
     }
 

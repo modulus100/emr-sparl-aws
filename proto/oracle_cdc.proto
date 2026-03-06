@@ -31,6 +31,26 @@ message CustomerState {
   string country = 8;
   string source_system = 9;
   string payload_padding = 10;
+  string phone_number = 11;
+  string middle_name = 12;
+  string date_of_birth = 13;
+  string loyalty_tier = 14;
+  string account_number = 15;
+  string postal_code = 16;
+  string state = 17;
+  string street_address = 18;
+  string company = 19;
+  string department = 20;
+  string job_title = 21;
+  string preferred_language = 22;
+  bool marketing_opt_in = 23;
+  int32 risk_score = 24;
+  int64 last_login_ts_ms = 25;
+  string updated_by = 26;
+  string segment = 27;
+  string tax_id = 28;
+  string external_reference = 29;
+  string notes = 30;
 }
 
 message OracleCdcEnvelope {

@@ -143,11 +143,20 @@ curl http://localhost:8080/api/v1/load-generator/status
 curl -X POST http://localhost:8080/api/v1/load-generator/stop
 ```
 
+Local runtime ports:
+
+- Kafka: `localhost:29092`
+- Schema Registry: `http://localhost:8086`
+- Kafbat: `http://localhost:8085`
+
+`docker-compose.yaml` wires Kafbat to Schema Registry, so protobuf messages produced by the load generator can be inspected there.
+
 YAML shape:
 
 ```yaml
 job_name: local-test
 bootstrap_servers: localhost:29092
+schema_registry_url: http://localhost:8086
 duration_seconds: 0
 workers:
   - name: local-primary

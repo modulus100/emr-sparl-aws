@@ -7,6 +7,7 @@ import java.util.List;
 public record LoadJobConfig(
         String jobName,
         String bootstrapServers,
+        String schemaRegistryUrl,
         long durationSeconds,
         OracleSourceConfig source,
         List<LoadWorkerConfig> workers
@@ -15,6 +16,7 @@ public record LoadJobConfig(
     public static LoadJobConfig fromYaml(
             @JsonProperty("job_name") String jobName,
             @JsonProperty("bootstrap_servers") String bootstrapServers,
+            @JsonProperty("schema_registry_url") String schemaRegistryUrl,
             @JsonProperty("duration_seconds") Long durationSeconds,
             @JsonProperty("source") OracleSourceConfig source,
             @JsonProperty("workers") List<LoadWorkerConfig> workers
@@ -22,6 +24,7 @@ public record LoadJobConfig(
         return new LoadJobConfig(
                 defaultString(jobName, "oracle-cdc-load"),
                 bootstrapServers,
+                defaultString(schemaRegistryUrl, "http://localhost:8086"),
                 durationSeconds == null ? 0L : durationSeconds,
                 source,
                 workers
@@ -40,6 +43,9 @@ public record LoadJobConfig(
     public void validate() {
         if (bootstrapServers == null || bootstrapServers.isBlank()) {
             throw new IllegalArgumentException("bootstrap_servers is required");
+        }
+        if (schemaRegistryUrl == null || schemaRegistryUrl.isBlank()) {
+            throw new IllegalArgumentException("schema_registry_url is required");
         }
         if (durationSeconds < 0) {
             throw new IllegalArgumentException("duration_seconds must be >= 0");

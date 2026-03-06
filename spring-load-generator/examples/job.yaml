@@ -1,5 +1,6 @@
 job_name: oracle-cdc-controlled
 bootstrap_servers: my-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092
+schema_registry_url: http://schema-registry.kafka.svc.cluster.local:8081
 duration_seconds: 600
 workers:
   - name: customers-fast

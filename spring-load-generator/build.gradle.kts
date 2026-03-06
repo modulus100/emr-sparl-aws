@@ -7,6 +7,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://packages.confluent.io/maven/")
 }
 
 dependencies {
@@ -15,8 +16,8 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.kafka)
     implementation(libs.jackson.dataformat.yaml)
-    implementation(libs.kafka.clients)
     implementation(libs.protobuf.java)
+    implementation(libs.confluent.kafka.protobuf.serializer)
 
     testImplementation(libs.spring.boot.starter.test)
 }
